@@ -119,6 +119,11 @@ function __log(base, value) {
   return Math.log(value) / Math.log(base);
 }
 
+function __sum(...args) {
+  const nums = args.flat().filter(x => typeof x === "number" && !isNaN(x));
+  return nums.reduce((a, b) => a + b, 0);
+}
+
 function __average(...args) {
   const nums = args.flat().filter(x => typeof x === "number" && !isNaN(x));
   if (nums.length === 0) return 0;
@@ -181,6 +186,7 @@ function parseFormula(rawExpr) {
     { key: "var.s", placeholder: "##VAR_S##" },
     { key: "var.p", placeholder: "##VAR_P##" },
     { key: "average", placeholder: "##AVERAGE##" },
+    { key: "sum", placeholder: "##SUM##" },
     { key: "permut", placeholder: "##PERMUT##" },
     { key: "combin", placeholder: "##COMBIN##" },
     { key: "asin", placeholder: "##ASIN##" },
@@ -217,6 +223,7 @@ function parseFormula(rawExpr) {
     "##VAR_S##": "__var_s",
     "##VAR_P##": "__var_p",
     "##AVERAGE##": "__average",
+    "##SUM##": "__sum",
     "##PERMUT##": "__permut",
     "##COMBIN##": "__combin",
     "##ASIN##": "Math.asin",
@@ -256,12 +263,12 @@ function calculateFormula() {
     
     // Evaluate in closed sandboxed scope
     const evaluator = new Function(
-      "__log", "__average", "__stdev_s", "__stdev_p", "__var_s", "__var_p", "__permut", "__combin", "factorial",
+      "__log", "__average", "__sum", "__stdev_s", "__stdev_p", "__var_s", "__var_p", "__permut", "__combin", "factorial",
       `return (${parsedExpr});`
     );
     
     const res = evaluator(
-      __log, __average, __stdev_s, __stdev_p, __var_s, __var_p, __permut, __combin, factorial
+      __log, __average, __sum, __stdev_s, __stdev_p, __var_s, __var_p, __permut, __combin, factorial
     );
 
     if (res === null || res === undefined || isNaN(res)) {
