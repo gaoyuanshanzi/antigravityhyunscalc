@@ -580,6 +580,10 @@ textarea:focus {
   border-right: 1px solid rgba(0, 0, 0, 0.08);
 }
 
+.data-grid th:not(.row-num-header), .data-grid td:not(.row-num-cell) {
+  min-width: 100px;
+}
+
 .data-grid tr:last-child td {
   border-bottom: none;
 }
@@ -648,12 +652,28 @@ textarea:focus {
 
 /* Grid Summary cards */
 .summary-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  overflow-x: auto;
   gap: 0.75rem;
+  padding-bottom: 0.5rem;
+}
+
+.summary-cards::-webkit-scrollbar {
+  height: 4px;
+}
+.summary-cards::-webkit-scrollbar-track {
+  background: transparent;
+}
+.summary-cards::-webkit-scrollbar-thumb {
+  background: rgba(37, 99, 235, 0.2);
+  border-radius: 4px;
+}
+.summary-cards::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.4);
 }
 
 .sum-card {
+  flex: 0 0 120px;
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(0, 0, 0, 0.04);
   border-radius: var(--radius-md);

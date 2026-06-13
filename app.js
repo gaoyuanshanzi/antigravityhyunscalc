@@ -2,6 +2,10 @@
 // Each entry: { raw, prettified, result, error }
 let leftFormulaLines = [];
 
+// Grid size configuration
+const COLS_COUNT = 30;
+const ROWS_COUNT = 101; // Row 0 to 100
+
 // Initialize application on load
 document.addEventListener("DOMContentLoaded", () => {
   buildGrid();
@@ -33,10 +37,10 @@ document.addEventListener("DOMContentLoaded", () => {
           if (c > 0) {
             focusCell(r, c - 1);
           } else {
-            focusCell(r - 1, 2);
+            focusCell(r - 1, COLS_COUNT - 1);
           }
         } else {
-          if (c < 2) {
+          if (c < COLS_COUNT - 1) {
             focusCell(r, c + 1);
           } else {
             focusCell(r + 1, 0);
@@ -78,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Helper to focus and select specific grid cell
 function focusCell(r, c) {
-  if (r >= 0 && r < 100 && c >= 0 && c < 3) {
+  if (r >= 0 && r < ROWS_COUNT && c >= 0 && c < COLS_COUNT) {
     const nextCell = document.getElementById(`cell-${r}-${c}`);
     if (nextCell) {
       nextCell.focus();
@@ -92,10 +96,10 @@ function focusCell(r, c) {
 
 // Demo Formula loader
 function loadDemoFormula() {
-  const demo = "average(10 pl 2, var.s(3, 5, 7) mu 4) mi sin(30?? pl log(10, 100) upper 3";
+  const demo = "average(10 pl 2, var.s(3, 5, 7) mu 4) mi sin(30deg) pl log(10, 100) upper 3";
   document.getElementById("formula-input").value = demo;
   localStorage.setItem("omnicalc_formula", demo);
-  showToast("?덉젣 ?섏떇??濡쒕뱶?섏뿀?듬땲??");
+  showToast("예제 수식이 로드되었습니다.");
 }
 
 // ----------------------------------------------------
@@ -254,8 +258,8 @@ function prettifyFormula(raw) {
   p = p.replace(/combin/gi, "##COMBIN##");
   p = p.replace(/\bpl\b/gi, "+");
   p = p.replace(/\bmi\b/gi, "-");
-  p = p.replace(/\bmu\b/gi, "횞");
-  p = p.replace(/\bdi\b/gi, "첨");
+  p = p.replace(/\bmu\b/gi, "×");
+  p = p.replace(/\bdi\b/gi, "÷");
   p = p.replace(/\bupper\b/gi, "^");
   p = p.replace(/##STDEV_S##/g, "stdev.s");
   p = p.replace(/##STDEV_P##/g, "stdev.p");
@@ -277,7 +281,7 @@ function evaluateLine(rawLine) {
     __log, __average, __sum, __stdev_s, __stdev_p, __var_s, __var_p, __permut, __combin, factorial
   );
   if (res === null || res === undefined || isNaN(res)) {
-    throw new Error("寃곌낵媛믪씠 ?щ컮瑜댁? ?딆뒿?덈떎 (NaN).");
+    throw new Error("결과값이 올바르지 않습니다 (NaN).");
   }
   return Number.isInteger(res) ? res.toString() : parseFloat(res.toFixed(10)).toString();
 }
@@ -293,7 +297,7 @@ function calculateFormula() {
   const nonEmptyLines = lines.filter(l => l.trim() !== "");
 
   if (nonEmptyLines.length === 0) {
-    resultEl.innerHTML = "<span class='result-placeholder'>?섏떇???낅젰?섏꽭??</span>";
+    resultEl.innerHTML = "<span class='result-placeholder'>수식을 입력하세요.</span>";
     parsedEl.textContent = "";
     leftFormulaLines = [];
     return;
@@ -322,8 +326,8 @@ function calculateFormula() {
         `<div class="result-line result-line--error">`
         + `<span class="result-line-num">${idx + 1}</span>`
         + `<span class="result-line-expr">${escapeHtml(raw)}</span>`
-        + `<span class="result-line-eq">??/span>`
-        + `<span class="result-line-val error-msg">?ㅻ쪟</span>`
+        + `<span class="result-line-eq">→</span>`
+        + `<span class="result-line-val error-msg">오류</span>`
         + `</div>`
       );
     }
@@ -346,23 +350,23 @@ function escapeHtml(str) {
 // Clear Left Section
 function clearFormula() {
   document.getElementById("formula-input").value = "";
-  document.getElementById("formula-result").innerHTML = "<span class='result-placeholder'>?湲?以?..</span>";
+  document.getElementById("formula-result").innerHTML = "<span class='result-placeholder'>대기 중...</span>";
   document.getElementById("formula-parsed").textContent = "";
   leftFormulaLines = [];
   localStorage.removeItem("omnicalc_formula");
   localStorage.removeItem("omnicalc_formula_result");
-  showToast("?섏떇??珥덇린?붾릺?덉뒿?덈떎.");
+  showToast("수식이 초기화되었습니다.");
 }
 
 // Copy Formula (a) -> Each line: prettified expression = result
 function copyFormulaA() {
   if (!leftFormulaLines || leftFormulaLines.length === 0) {
-    showToast("怨꾩궛??癒쇱? ?꾨즺??二쇱꽭??", true);
+    showToast("계산을 먼저 완료해 주세요.", true);
     return;
   }
   const successLines = leftFormulaLines.filter(l => l.result !== null);
   if (successLines.length === 0) {
-    showToast("?뺤긽?곸쑝濡?怨꾩궛???섏떇???놁뒿?덈떎.", true);
+    showToast("정상적으로 계산된 수식이 없습니다.", true);
     return;
   }
   const text = successLines.map(l => `${l.pretty} = ${l.result}`).join("\n");
@@ -372,12 +376,12 @@ function copyFormulaA() {
 // Copy Formula (b) -> All results only (one per line)
 function copyFormulaB() {
   if (!leftFormulaLines || leftFormulaLines.length === 0) {
-    showToast("怨꾩궛??癒쇱? ?꾨즺??二쇱꽭??", true);
+    showToast("계산을 먼저 완료해 주세요.", true);
     return;
   }
   const successLines = leftFormulaLines.filter(l => l.result !== null);
   if (successLines.length === 0) {
-    showToast("?뺤긽?곸쑝濡?怨꾩궛???섏떇???놁뒿?덈떎.", true);
+    showToast("정상적으로 계산된 수식이 없습니다.", true);
     return;
   }
   const text = successLines.map(l => l.result).join("\n");
@@ -387,11 +391,11 @@ function copyFormulaB() {
 // Export formula results as txt file (all lines)
 function exportFormulaTxt() {
   if (!leftFormulaLines || leftFormulaLines.length === 0) {
-    showToast("?섏떇???낅젰?섍퀬 怨꾩궛??癒쇱? ?ㅽ뻾??二쇱꽭??", true);
+    showToast("수식을 입력하고 계산을 먼저 실행해 주세요.", true);
     return;
   }
   const lines = leftFormulaLines.map((l, i) => {
-    if (l.error) return `[${i + 1}] ${l.raw}  ???ㅻ쪟: ${l.error}`;
+    if (l.error) return `[${i + 1}] ${l.raw}  → 오류: ${l.error}`;
     return `[${i + 1}] ${l.pretty} = ${l.result}`;
   });
   const content = `[OmniCalc Multi-Line Formula Results]\nExport Time: ${new Date().toLocaleString()}\n\n` + lines.join("\n");
@@ -402,21 +406,87 @@ function exportFormulaTxt() {
 // 2. Grid Management (Right Section)
 // ----------------------------------------------------
 
-// Dynamically generate the 3x10 grid cells
+// Helper to get Excel column name (A, B, C, ..., Z, AA, AB, ...)
+function getColName(colIndex) {
+  let name = "";
+  let temp = colIndex;
+  while (temp >= 0) {
+    name = String.fromCharCode((temp % 26) + 65) + name;
+    temp = Math.floor(temp / 26) - 1;
+  }
+  return name;
+}
+
+// Dynamically generate summary cards container
+function buildSummaryCards() {
+  const container = document.querySelector(".summary-cards");
+  if (!container) return;
+  container.innerHTML = "";
+  for (let c = 0; c < COLS_COUNT; c++) {
+    const card = document.createElement("div");
+    card.className = "sum-card";
+    
+    const label = document.createElement("span");
+    label.className = "sum-label";
+    label.textContent = `${getColName(c)}열 합계`;
+    
+    const val = document.createElement("span");
+    val.className = "sum-value";
+    val.id = `col-sum-${c}`;
+    val.textContent = "0";
+    
+    card.appendChild(label);
+    card.appendChild(val);
+    container.appendChild(card);
+  }
+}
+
+// Dynamically generate the grid cells and headers
 function buildGrid() {
-  const tbody = document.getElementById("grid-body");
+  const dataGrid = document.getElementById("data-grid");
+  if (!dataGrid) return;
+  
+  // Clear and build matching thead
+  let thead = dataGrid.querySelector("thead");
+  if (!thead) {
+    thead = document.createElement("thead");
+    dataGrid.appendChild(thead);
+  }
+  thead.innerHTML = "";
+  
+  const headerTr = document.createElement("tr");
+  const rowNumTh = document.createElement("th");
+  rowNumTh.className = "row-num-header";
+  rowNumTh.textContent = "#";
+  headerTr.appendChild(rowNumTh);
+  
+  for (let c = 0; c < COLS_COUNT; c++) {
+    const th = document.createElement("th");
+    const colName = getColName(c);
+    th.textContent = `${colName}열 (Col ${c + 1})`;
+    headerTr.appendChild(th);
+  }
+  thead.appendChild(headerTr);
+
+  // Build tbody
+  let tbody = dataGrid.querySelector("tbody");
+  if (!tbody) {
+    tbody = document.createElement("tbody");
+    dataGrid.appendChild(tbody);
+  }
+  tbody.id = "grid-body";
   tbody.innerHTML = "";
   
-  for (let r = 0; r < 100; r++) {
+  for (let r = 0; r < ROWS_COUNT; r++) {
     const tr = document.createElement("tr");
     
     // Row number cell
     const rowNumTd = document.createElement("td");
     rowNumTd.className = "row-num-cell";
-    rowNumTd.textContent = r + 1;
+    rowNumTd.textContent = r; // Row number starts at 0
     tr.appendChild(rowNumTd);
 
-    for (let c = 0; c < 3; c++) {
+    for (let c = 0; c < COLS_COUNT; c++) {
       const td = document.createElement("td");
       const input = document.createElement("input");
       input.type = "text";
@@ -429,16 +499,19 @@ function buildGrid() {
     }
     tbody.appendChild(tr);
   }
+
+  // Also build summary cards
+  buildSummaryCards();
 }
 
 // Live compute sums and update grand totals
 function calculateGrid() {
-  let colSums = [0, 0, 0];
+  let colSums = Array(COLS_COUNT).fill(0);
   let allNumbers = [];
   
-  for (let c = 0; c < 3; c++) {
+  for (let c = 0; c < COLS_COUNT; c++) {
     let sum = 0;
-    for (let r = 0; r < 100; r++) {
+    for (let r = 0; r < ROWS_COUNT; r++) {
       const input = document.getElementById(`cell-${r}-${c}`);
       if (input) {
         const val = input.value.trim();
@@ -457,7 +530,10 @@ function calculateGrid() {
       }
     }
     colSums[c] = sum;
-    document.getElementById(`col-sum-${c}`).textContent = formatNumber(sum);
+    const colSumEl = document.getElementById(`col-sum-${c}`);
+    if (colSumEl) {
+      colSumEl.textContent = formatNumber(sum);
+    }
   }
   
   const grandTotal = colSums.reduce((a, b) => a + b, 0);
@@ -472,8 +548,8 @@ function formatNumber(num) {
 
 // Reset Grid Content
 function clearGrid() {
-  for (let r = 0; r < 100; r++) {
-    for (let c = 0; c < 3; c++) {
+  for (let r = 0; r < ROWS_COUNT; r++) {
+    for (let c = 0; c < COLS_COUNT; c++) {
       const input = document.getElementById(`cell-${r}-${c}`);
       if (input) {
         input.value = "";
@@ -482,14 +558,14 @@ function clearGrid() {
     }
   }
   calculateGrid();
-  showToast("洹몃━?쒓? 珥덇린?붾릺?덉뒿?덈떎.");
+  showToast("그리드가 초기화되었습니다.");
 }
 
 // Copy Grid (a) -> List of all numbers in parentheses e.g. "(1,2,3)"
 function copyGridA() {
   const numbers = getGridNumbers();
   if (numbers.length === 0) {
-    showToast("?낅젰???レ옄媛 ?놁뒿?덈떎.", true);
+    showToast("입력된 숫자가 없습니다.", true);
     return;
   }
   const result = `(${numbers.join(",")})`;
@@ -502,35 +578,52 @@ function copyGridB() {
   copyToClipboard(gtValue);
 }
 
-// Export entered numbers into CSV file format
+// Export entered values into CSV file format
 function exportGridCsv() {
-  const numbers = getGridNumbers();
-  if (numbers.length === 0) {
-    showToast("?대낫???レ옄媛 ?놁뒿?덈떎.", true);
+  // Check if there is any text or numbers entered in the grid
+  let hasContent = false;
+  for (let r = 0; r < ROWS_COUNT; r++) {
+    for (let c = 0; c < COLS_COUNT; c++) {
+      const input = document.getElementById(`cell-${r}-${c}`);
+      if (input && input.value.trim() !== "") {
+        hasContent = true;
+        break;
+      }
+    }
+    if (hasContent) break;
+  }
+
+  if (!hasContent) {
+    showToast("내보낼 데이터가 없습니다.", true);
     return;
   }
   
-  // Method 1: Export only the list of numbers in a single column
-  // Method 2: Export the entire 3x10 grid with empty slots.
-  // Preserving grid layout is extremely convenient for spreadsheets.
   let csvContent = "";
-  for (let r = 0; r < 100; r++) {
+  for (let r = 0; r < ROWS_COUNT; r++) {
     let rowCells = [];
-    for (let c = 0; c < 3; c++) {
+    for (let c = 0; c < COLS_COUNT; c++) {
       const input = document.getElementById(`cell-${r}-${c}`);
-      rowCells.push(input ? input.value : "");
+      let val = input ? input.value : "";
+      
+      // Escape commas and double quotes for CSV format
+      if (val.includes(",") || val.includes('"') || val.includes("\n")) {
+        val = '"' + val.replace(/"/g, '""') + '"';
+      }
+      rowCells.push(val);
     }
     csvContent += rowCells.join(",") + "\r\n";
   }
   
-  downloadFile(csvContent, "omnicalc_grid.csv", "text/csv;charset=utf-8;");
+  // Prepend UTF-8 BOM (\ufeff) to resolve Korean encoding corruption in Excel
+  const bom = "\ufeff";
+  downloadFile(bom + csvContent, "omnicalc_grid.csv", "text/csv;charset=utf-8;");
 }
 
 // Scans grid in row-major order and pulls valid numbers
 function getGridNumbers() {
   let numbers = [];
-  for (let r = 0; r < 100; r++) {
-    for (let c = 0; c < 3; c++) {
+  for (let r = 0; r < ROWS_COUNT; r++) {
+    for (let c = 0; c < COLS_COUNT; c++) {
       const input = document.getElementById(`cell-${r}-${c}`);
       if (input) {
         const val = input.value.trim();
@@ -552,9 +645,9 @@ function getGridNumbers() {
 
 function saveGridState() {
   let gridState = [];
-  for (let r = 0; r < 100; r++) {
+  for (let r = 0; r < ROWS_COUNT; r++) {
     let row = [];
-    for (let c = 0; c < 3; c++) {
+    for (let c = 0; c < COLS_COUNT; c++) {
       const input = document.getElementById(`cell-${r}-${c}`);
       row.push(input ? input.value : "");
     }
@@ -583,8 +676,8 @@ function loadState() {
             return `<div class="result-line result-line--error">`
               + `<span class="result-line-num">${idx + 1}</span>`
               + `<span class="result-line-expr">${escapeHtml(l.raw)}</span>`
-              + `<span class="result-line-eq">&#8594;</span>`
-              + `<span class="result-line-val error-msg">&#50724;&#47448;</span>`
+              + `<span class="result-line-eq">→</span>`
+              + `<span class="result-line-val error-msg">오류</span>`
               + `</div>`;
           }
           return `<div class="result-line">`
@@ -610,8 +703,8 @@ function loadState() {
   if (savedGrid) {
     try {
       const gridState = JSON.parse(savedGrid);
-      for (let r = 0; r < 100; r++) {
-        for (let c = 0; c < 3; c++) {
+      for (let r = 0; r < ROWS_COUNT; r++) {
+        for (let c = 0; c < COLS_COUNT; c++) {
           const input = document.getElementById(`cell-${r}-${c}`);
           if (input && gridState[r] && gridState[r][c] !== undefined) {
             input.value = gridState[r][c];
@@ -693,10 +786,10 @@ function handleSwipe() {
 
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
-    showToast("?대┰蹂대뱶??蹂듭궗?섏뿀?듬땲??");
+    showToast("클립보드에 복사되었습니다.");
   }).catch(err => {
     console.error("Copy failed", err);
-    showToast("蹂듭궗 ?ㅽ뙣. 釉뚮씪?곗? 沅뚰븳???뺤씤??二쇱꽭??", true);
+    showToast("복사 실패. 브라우저 권한을 확인해 주세요.", true);
   });
 }
 
