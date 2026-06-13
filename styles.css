@@ -392,17 +392,103 @@ textarea:focus {
   font-weight: 500;
 }
 
-.result-value {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #0F172A;
-  word-break: break-all;
-  font-family: var(--font-header);
+.result-placeholder {
+  color: var(--text-muted);
+  font-size: 1rem;
+  font-style: italic;
 }
 
-.result-value.error {
+/* Multi-line result container */
+.result-lines-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.result-lines-container::-webkit-scrollbar {
+  width: 4px;
+}
+.result-lines-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.result-lines-container::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.2);
+  border-radius: 4px;
+}
+
+/* Individual result row */
+.result-line {
+  display: grid;
+  grid-template-columns: 24px 1fr auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: rgba(124, 58, 237, 0.03);
+  border: 1px solid rgba(124, 58, 237, 0.08);
+  transition: background 0.2s;
+}
+
+.result-line:hover {
+  background: rgba(124, 58, 237, 0.07);
+}
+
+.result-line--error {
+  background: rgba(220, 38, 38, 0.03);
+  border-color: rgba(220, 38, 38, 0.1);
+}
+
+.result-line--error:hover {
+  background: rgba(220, 38, 38, 0.06);
+}
+
+.result-line-num {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-align: center;
+  background: rgba(124, 58, 237, 0.08);
+  border-radius: 3px;
+  padding: 0.1rem 0.2rem;
+  line-height: 1.4;
+}
+
+.result-line--error .result-line-num {
   color: var(--text-danger);
-  font-size: 1.1rem;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.result-line-expr {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-line-eq {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.result-line-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0F172A;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.error-msg {
+  color: var(--text-danger);
+  font-size: 0.8rem;
   font-family: var(--font-main);
 }
 

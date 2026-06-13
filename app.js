@@ -1,6 +1,6 @@
 // State variables
-let leftFormulaResult = "";
-let leftFormulaExprParsed = "";
+// Each entry: { raw, prettified, result, error }
+let leftFormulaLines = [];
 
 // Initialize application on load
 document.addEventListener("DOMContentLoaded", () => {
@@ -243,132 +243,158 @@ function parseFormula(rawExpr) {
   return expr;
 }
 
-// Evaluate & Display
+// Helper: prettify operator symbols for display/copy
+function prettifyFormula(raw) {
+  let p = raw;
+  p = p.replace(/stdev\.s/gi, "##STDEV_S##");
+  p = p.replace(/stdev\.p/gi, "##STDEV_P##");
+  p = p.replace(/var\.s/gi, "##VAR_S##");
+  p = p.replace(/var\.p/gi, "##VAR_P##");
+  p = p.replace(/permut/gi, "##PERMUT##");
+  p = p.replace(/combin/gi, "##COMBIN##");
+  p = p.replace(/\bpl\b/gi, "+");
+  p = p.replace(/\bmi\b/gi, "-");
+  p = p.replace(/\bmu\b/gi, "×");
+  p = p.replace(/\bdi\b/gi, "÷");
+  p = p.replace(/\bupper\b/gi, "^");
+  p = p.replace(/##STDEV_S##/g, "stdev.s");
+  p = p.replace(/##STDEV_P##/g, "stdev.p");
+  p = p.replace(/##VAR_S##/g, "var.s");
+  p = p.replace(/##VAR_P##/g, "var.p");
+  p = p.replace(/##PERMUT##/g, "permut");
+  p = p.replace(/##COMBIN##/g, "combin");
+  return p;
+}
+
+// Helper: evaluate a single raw formula line
+function evaluateLine(rawLine) {
+  const parsedExpr = parseFormula(rawLine);
+  const evaluator = new Function(
+    "__log", "__average", "__sum", "__stdev_s", "__stdev_p", "__var_s", "__var_p", "__permut", "__combin", "factorial",
+    `return (${parsedExpr});`
+  );
+  const res = evaluator(
+    __log, __average, __sum, __stdev_s, __stdev_p, __var_s, __var_p, __permut, __combin, factorial
+  );
+  if (res === null || res === undefined || isNaN(res)) {
+    throw new Error("결과값이 올바르지 않습니다 (NaN).");
+  }
+  return Number.isInteger(res) ? res.toString() : parseFloat(res.toFixed(10)).toString();
+}
+
+// Evaluate & Display (multi-line support)
 function calculateFormula() {
   const inputEl = document.getElementById("formula-input");
   const resultEl = document.getElementById("formula-result");
   const parsedEl = document.getElementById("formula-parsed");
-  
-  const rawInput = inputEl.value.trim();
-  if (!rawInput) {
-    resultEl.textContent = "수식을 입력하세요.";
-    resultEl.className = "result-value error";
+
+  const rawInput = inputEl.value;
+  const lines = rawInput.split("\n");
+  const nonEmptyLines = lines.filter(l => l.trim() !== "");
+
+  if (nonEmptyLines.length === 0) {
+    resultEl.innerHTML = "<span class='result-placeholder'>수식을 입력하세요.</span>";
     parsedEl.textContent = "";
-    leftFormulaResult = "";
+    leftFormulaLines = [];
     return;
   }
 
-  try {
-    const parsedExpr = parseFormula(rawInput);
-    
-    // Evaluate in closed sandboxed scope
-    const evaluator = new Function(
-      "__log", "__average", "__sum", "__stdev_s", "__stdev_p", "__var_s", "__var_p", "__permut", "__combin", "factorial",
-      `return (${parsedExpr});`
-    );
-    
-    const res = evaluator(
-      __log, __average, __sum, __stdev_s, __stdev_p, __var_s, __var_p, __permut, __combin, factorial
-    );
+  leftFormulaLines = [];
+  const resultItems = [];
 
-    if (res === null || res === undefined || isNaN(res)) {
-      throw new Error("결과값이 올바르지 않습니다 (NaN).");
+  nonEmptyLines.forEach((line, idx) => {
+    const raw = line.trim();
+    try {
+      const result = evaluateLine(raw);
+      const pretty = prettifyFormula(raw);
+      leftFormulaLines.push({ raw, pretty, result, error: null });
+      resultItems.push(
+        `<div class="result-line">`
+        + `<span class="result-line-num">${idx + 1}</span>`
+        + `<span class="result-line-expr">${escapeHtml(pretty)}</span>`
+        + `<span class="result-line-eq">=</span>`
+        + `<span class="result-line-val">${escapeHtml(result)}</span>`
+        + `</div>`
+      );
+    } catch (err) {
+      leftFormulaLines.push({ raw, pretty: prettifyFormula(raw), result: null, error: err.message });
+      resultItems.push(
+        `<div class="result-line result-line--error">`
+        + `<span class="result-line-num">${idx + 1}</span>`
+        + `<span class="result-line-expr">${escapeHtml(raw)}</span>`
+        + `<span class="result-line-eq">→</span>`
+        + `<span class="result-line-val error-msg">오류</span>`
+        + `</div>`
+      );
     }
+  });
 
-    // Output formatting
-    const formattedResult = Number.isInteger(res) ? res.toString() : parseFloat(res.toFixed(10)).toString();
-    resultEl.textContent = formattedResult;
-    resultEl.className = "result-value";
-    
-    // Display preview of parsed JS math
-    parsedEl.textContent = `JS 변환식: ${parsedExpr}`;
-    leftFormulaResult = formattedResult;
+  resultEl.innerHTML = resultItems.join("");
+  parsedEl.textContent = "";
 
-    // Save calculation history
-    localStorage.setItem("omnicalc_formula_result", formattedResult);
-  } catch (err) {
-    resultEl.textContent = "계산 오류: 입력 공식을 확인하세요.";
-    resultEl.className = "result-value error";
-    parsedEl.textContent = `에러 상세: ${err.message}`;
-    leftFormulaResult = "";
-  }
+  // Save state
+  localStorage.setItem("omnicalc_formula_result", JSON.stringify(leftFormulaLines));
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 // Clear Left Section
 function clearFormula() {
   document.getElementById("formula-input").value = "";
-  document.getElementById("formula-result").textContent = "대기 중...";
-  document.getElementById("formula-result").className = "result-value";
+  document.getElementById("formula-result").innerHTML = "<span class='result-placeholder'>대기 중...</span>";
   document.getElementById("formula-parsed").textContent = "";
-  leftFormulaResult = "";
+  leftFormulaLines = [];
   localStorage.removeItem("omnicalc_formula");
   localStorage.removeItem("omnicalc_formula_result");
   showToast("수식이 초기화되었습니다.");
 }
 
-// Copy Formula (a) -> Custom Math Symbols + "= Result"
+// Copy Formula (a) -> Each line: prettified expression = result
 function copyFormulaA() {
-  const rawInput = document.getElementById("formula-input").value.trim();
-  if (!rawInput || !leftFormulaResult) {
+  if (!leftFormulaLines || leftFormulaLines.length === 0) {
     showToast("계산을 먼저 완료해 주세요.", true);
     return;
   }
-
-  // Prettify math symbols for User Copy
-  let prettified = rawInput;
-  // Temporary escape functions to prevent mapping issues
-  prettified = prettified.replace(/stdev\.s/gi, "##STDEV_S##");
-  prettified = prettified.replace(/stdev\.p/gi, "##STDEV_P##");
-  prettified = prettified.replace(/var\.s/gi, "##VAR_S##");
-  prettified = prettified.replace(/var\.p/gi, "##VAR_P##");
-  prettified = prettified.replace(/permut/gi, "##PERMUT##");
-  prettified = prettified.replace(/combin/gi, "##COMBIN##");
-
-  // Map to actual mathematical characters
-  prettified = prettified.replace(/\bpl\b/gi, "+");
-  prettified = prettified.replace(/\bmi\b/gi, "-");
-  prettified = prettified.replace(/\bmu\b/gi, "×");
-  prettified = prettified.replace(/\bdi\b/gi, "÷");
-  prettified = prettified.replace(/\bupper\b/gi, "^");
-
-  // Restore functions
-  prettified = prettified.replace(/##STDEV_S##/g, "stdev.s");
-  prettified = prettified.replace(/##STDEV_P##/g, "stdev.p");
-  prettified = prettified.replace(/##VAR_S##/g, "var.s");
-  prettified = prettified.replace(/##VAR_P##/g, "var.p");
-  prettified = prettified.replace(/##PERMUT##/g, "permut");
-  prettified = prettified.replace(/##COMBIN##/g, "combin");
-
-  const fullText = `${prettified} = ${leftFormulaResult}`;
-  copyToClipboard(fullText);
+  const successLines = leftFormulaLines.filter(l => l.result !== null);
+  if (successLines.length === 0) {
+    showToast("정상적으로 계산된 수식이 없습니다.", true);
+    return;
+  }
+  const text = successLines.map(l => `${l.pretty} = ${l.result}`).join("\n");
+  copyToClipboard(text);
 }
 
-// Copy Formula (b) -> Final answer only
+// Copy Formula (b) -> All results only (one per line)
 function copyFormulaB() {
-  if (!leftFormulaResult) {
+  if (!leftFormulaLines || leftFormulaLines.length === 0) {
     showToast("계산을 먼저 완료해 주세요.", true);
     return;
   }
-  copyToClipboard(leftFormulaResult);
+  const successLines = leftFormulaLines.filter(l => l.result !== null);
+  if (successLines.length === 0) {
+    showToast("정상적으로 계산된 수식이 없습니다.", true);
+    return;
+  }
+  const text = successLines.map(l => l.result).join("\n");
+  copyToClipboard(text);
 }
 
-// Export formula calculation details as txt file
+// Export formula results as txt file (all lines)
 function exportFormulaTxt() {
-  const rawInput = document.getElementById("formula-input").value.trim();
-  if (!rawInput || !leftFormulaResult) {
+  if (!leftFormulaLines || leftFormulaLines.length === 0) {
     showToast("수식을 입력하고 계산을 먼저 실행해 주세요.", true);
     return;
   }
-
-  // Same pretty mapping as Copy A
-  let prettified = rawInput
-    .replace(/\bpl\b/gi, "+")
-    .replace(/\bmi\b/gi, "-")
-    .replace(/\bmu\b/gi, "×")
-    .replace(/\bdi\b/gi, "÷")
-    .replace(/\bupper\b/gi, "^");
-
-  const content = `[OmniCalc Formula Result]\nOriginal Input: ${rawInput}\nMathematical Expression: ${prettified}\nResult: ${leftFormulaResult}\nExport Time: ${new Date().toLocaleString()}`;
+  const lines = leftFormulaLines.map((l, i) => {
+    if (l.error) return `[${i + 1}] ${l.raw}  → 오류: ${l.error}`;
+    return `[${i + 1}] ${l.pretty} = ${l.result}`;
+  });
+  const content = `[OmniCalc Multi-Line Formula Results]\nExport Time: ${new Date().toLocaleString()}\n\n` + lines.join("\n");
   downloadFile(content, "omnicalc_result.txt", "text/plain");
 }
 
