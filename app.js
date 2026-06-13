@@ -203,6 +203,27 @@ function __zscore(x, avg, stdev) {
   return (x - avg) / stdev;
 }
 
+function stdNormalCDF(x) {
+  const p = 0.2316419;
+  const b1 = 0.319381530;
+  const b2 = -0.356563782;
+  const b3 = 1.781477937;
+  const b4 = -1.821255978;
+  const b5 = 1.330274429;
+
+  const absX = Math.abs(x);
+  const t = 1.0 / (1.0 + p * absX);
+  const y = 1.0 - (1.0 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * absX * absX) * 
+            (b1 * t + b2 * t * t + b3 * Math.pow(t, 3) + b4 * Math.pow(t, 4) + b5 * Math.pow(t, 5));
+  
+  return x >= 0 ? y : 1.0 - y;
+}
+
+function __zprob(z) {
+  if (typeof z !== "number" || isNaN(z)) return NaN;
+  return stdNormalCDF(-z);
+}
+
 // Function to preprocess formula to javascript executable code
 function parseFormula(rawExpr) {
   let expr = rawExpr.toLowerCase();
@@ -218,6 +239,7 @@ function parseFormula(rawExpr) {
     { key: "permut", placeholder: "##PERMUT##" },
     { key: "combin", placeholder: "##COMBIN##" },
     { key: "zscore", placeholder: "##ZSCORE##" },
+    { key: "zprob", placeholder: "##ZPROB##" },
     { key: "asin", placeholder: "##ASIN##" },
     { key: "acos", placeholder: "##ACOS##" },
     { key: "atan", placeholder: "##ATAN##" },
@@ -256,6 +278,7 @@ function parseFormula(rawExpr) {
     "##PERMUT##": "__permut",
     "##COMBIN##": "__combin",
     "##ZSCORE##": "__zscore",
+    "##ZPROB##": "__zprob",
     "##ASIN##": "Math.asin",
     "##ACOS##": "Math.acos",
     "##ATAN##": "Math.atan",
@@ -300,11 +323,11 @@ function prettifyFormula(raw) {
 function evaluateLine(rawLine) {
   const parsedExpr = parseFormula(rawLine);
   const evaluator = new Function(
-    "__log", "__average", "__sum", "__stdev_s", "__stdev_p", "__var_s", "__var_p", "__permut", "__combin", "factorial", "__zscore",
+    "__log", "__average", "__sum", "__stdev_s", "__stdev_p", "__var_s", "__var_p", "__permut", "__combin", "factorial", "__zscore", "__zprob",
     `return (${parsedExpr});`
   );
   const res = evaluator(
-    __log, __average, __sum, __stdev_s, __stdev_p, __var_s, __var_p, __permut, __combin, factorial, __zscore
+    __log, __average, __sum, __stdev_s, __stdev_p, __var_s, __var_p, __permut, __combin, factorial, __zscore, __zprob
   );
   if (res === null || res === undefined || isNaN(res)) {
     throw new Error("결과값이 올바르지 않습니다 (NaN).");
