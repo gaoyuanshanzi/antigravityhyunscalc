@@ -434,8 +434,8 @@ textarea:focus {
 .grid-table-container {
   overflow-x: auto;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.45);
   max-height: 400px;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.01);
 }
@@ -447,39 +447,52 @@ textarea:focus {
 }
 
 .data-grid th {
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(0, 0, 0, 0.03);
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.6rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 0.75rem 0.6rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+.data-grid th:last-child {
+  border-right: none;
+}
+
 .data-grid td {
-  padding: 0.25rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+  padding: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.data-grid tr:last-child td {
+  border-bottom: none;
+}
+
+.data-grid td:last-child {
+  border-right: none;
 }
 
 .grid-cell-input {
   width: 100%;
+  height: 100%;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border: none;
   color: #1E293B;
-  padding: 0.5rem;
+  padding: 0.7rem 0.5rem;
   text-align: center;
   font-family: var(--font-main);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   outline: none;
   transition: var(--transition-smooth);
 }
 
 .grid-cell-input:focus {
-  background: rgba(37, 99, 235, 0.04);
-  border-color: rgba(37, 99, 235, 0.25);
-  box-shadow: 0 0 8px rgba(37, 99, 235, 0.1);
+  background: rgba(37, 99, 235, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.25);
 }
 
 .grid-cell-input.has-number {
