@@ -281,7 +281,8 @@ function parseFormula(rawExpr) {
     { key: "cos", placeholder: "##COS##" },
     { key: "tan", placeholder: "##TAN##" },
     { key: "log", placeholder: "##LOG##" },
-    { key: "pi", placeholder: "##PI##" }
+    { key: "pi", placeholder: "##PI##" },
+    { key: "e", placeholder: "##E##" }
   ];
 
   // Apply placeholders
@@ -321,7 +322,8 @@ function parseFormula(rawExpr) {
     "##COS##": "Math.cos",
     "##TAN##": "Math.tan",
     "##LOG##": "__log",
-    "##PI##": "Math.PI"
+    "##PI##": "Math.PI",
+    "##E##": "Math.E"
   };
 
   Object.entries(restoreMap).forEach(([placeholder, jsBinding]) => {
