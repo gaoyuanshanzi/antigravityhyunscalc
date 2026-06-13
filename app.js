@@ -1,4 +1,4 @@
-﻿// State variables
+// State variables
 // Each entry: { raw, prettified, result, error }
 let leftFormulaLines = [];
 
