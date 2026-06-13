@@ -78,6 +78,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Setup mobile swipe detection
   initSwipeGestures();
+
+  // Connect horizontal scroll slider
+  const colSlider = document.getElementById("grid-col-slider");
+  const gridContainer = document.querySelector(".grid-table-container");
+  if (colSlider && gridContainer) {
+    colSlider.addEventListener("input", () => {
+      const maxScrollLeft = gridContainer.scrollWidth - gridContainer.clientWidth;
+      gridContainer.scrollLeft = (colSlider.value / 100) * maxScrollLeft;
+    });
+    
+    gridContainer.addEventListener("scroll", () => {
+      const maxScrollLeft = gridContainer.scrollWidth - gridContainer.clientWidth;
+      if (maxScrollLeft > 0) {
+        colSlider.value = Math.round((gridContainer.scrollLeft / maxScrollLeft) * 100);
+      } else {
+        colSlider.value = 0;
+      }
+    });
+  }
 });
 
 // Helper to focus and select specific grid cell
