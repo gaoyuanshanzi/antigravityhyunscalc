@@ -205,9 +205,9 @@ function parseFormula(rawExpr) {
     expr = expr.replace(regex, item.placeholder);
   });
 
-  // Parse Degree symbol "도"
-  // Example: 30도 -> ((30) * Math.PI / 180)
-  expr = expr.replace(/(\d+(?:\.\d+)?)\s*도/g, "(($1) * Math.PI / 180)");
+  // Parse Degree symbol "deg"
+  // Example: 30deg -> ((30) * Math.PI / 180)
+  expr = expr.replace(/(\d+(?:\.\d+)?)\s*deg/g, "(($1) * Math.PI / 180)");
 
   // Translate custom operators
   expr = expr.replace(/pl/g, "+");
@@ -564,18 +564,48 @@ function saveGridState() {
 }
 
 function loadState() {
-  // Restore left section
+  // Restore left section formula input
   const savedFormula = localStorage.getItem("omnicalc_formula");
   if (savedFormula) {
     document.getElementById("formula-input").value = savedFormula;
   }
+
+  // Restore left section result (new multi-line format)
   const savedResult = localStorage.getItem("omnicalc_formula_result");
   if (savedResult) {
-    document.getElementById("formula-result").textContent = savedResult;
-    leftFormulaResult = savedResult;
+    try {
+      const parsed = JSON.parse(savedResult);
+      if (Array.isArray(parsed)) {
+        leftFormulaLines = parsed;
+        const resultEl = document.getElementById("formula-result");
+        const items = parsed.map((l, idx) => {
+          if (l.error) {
+            return `<div class="result-line result-line--error">`
+              + `<span class="result-line-num">${idx + 1}</span>`
+              + `<span class="result-line-expr">${escapeHtml(l.raw)}</span>`
+              + `<span class="result-line-eq">&#8594;</span>`
+              + `<span class="result-line-val error-msg">&#50724;&#47448;</span>`
+              + `</div>`;
+          }
+          return `<div class="result-line">`
+            + `<span class="result-line-num">${idx + 1}</span>`
+            + `<span class="result-line-expr">${escapeHtml(l.pretty)}</span>`
+            + `<span class="result-line-eq">=</span>`
+            + `<span class="result-line-val">${escapeHtml(l.result)}</span>`
+            + `</div>`;
+        });
+        resultEl.innerHTML = items.join("");
+      } else {
+        // Old format - discard
+        localStorage.removeItem("omnicalc_formula_result");
+      }
+    } catch(e) {
+      // Not valid JSON - old format, clear it
+      localStorage.removeItem("omnicalc_formula_result");
+    }
   }
 
-  // Restore right section
+  // Restore right section grid
   const savedGrid = localStorage.getItem("omnicalc_grid");
   if (savedGrid) {
     try {
@@ -590,9 +620,10 @@ function loadState() {
       }
     } catch (e) {
       console.error("Failed to restore grid state", e);
+      localStorage.removeItem("omnicalc_grid");
     }
   }
-  calculateGrid(); // Trigger recalculation to display totals
+  calculateGrid();
 }
 
 // ----------------------------------------------------
