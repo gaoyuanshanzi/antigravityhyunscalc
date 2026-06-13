@@ -205,9 +205,9 @@ function parseFormula(rawExpr) {
     expr = expr.replace(regex, item.placeholder);
   });
 
-  // Parse Degree symbol "??
-  // Example: 30??-> ((30) * Math.PI / 180)
-  expr = expr.replace(/(\d+(?:\.\d+)?)\s*??g, "(($1) * Math.PI / 180)");
+  // Parse Degree symbol "도"
+  // Example: 30도 -> ((30) * Math.PI / 180)
+  expr = expr.replace(/(\d+(?:\.\d+)?)\s*도/g, "(($1) * Math.PI / 180)");
 
   // Translate custom operators
   expr = expr.replace(/pl/g, "+");
