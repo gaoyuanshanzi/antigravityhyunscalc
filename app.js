@@ -383,6 +383,13 @@ function buildGrid() {
   
   for (let r = 0; r < 10; r++) {
     const tr = document.createElement("tr");
+    
+    // Row number cell
+    const rowNumTd = document.createElement("td");
+    rowNumTd.className = "row-num-cell";
+    rowNumTd.textContent = r + 1;
+    tr.appendChild(rowNumTd);
+
     for (let c = 0; c < 3; c++) {
       const td = document.createElement("td");
       const input = document.createElement("input");
