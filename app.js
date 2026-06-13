@@ -14,6 +14,59 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Listen for grid keyboard navigation (Enter, Tab, Arrows)
+  document.getElementById("grid-body").addEventListener("keydown", (e) => {
+    if (!e.target.classList.contains("grid-cell-input")) return;
+    
+    const input = e.target;
+    const r = parseInt(input.getAttribute("data-row"));
+    const c = parseInt(input.getAttribute("data-col"));
+    
+    switch (e.key) {
+      case "Enter":
+        e.preventDefault();
+        focusCell(r + 1, c);
+        break;
+      case "Tab":
+        e.preventDefault();
+        if (e.shiftKey) {
+          if (c > 0) {
+            focusCell(r, c - 1);
+          } else {
+            focusCell(r - 1, 2);
+          }
+        } else {
+          if (c < 2) {
+            focusCell(r, c + 1);
+          } else {
+            focusCell(r + 1, 0);
+          }
+        }
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        focusCell(r - 1, c);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        focusCell(r + 1, c);
+        break;
+      case "ArrowLeft":
+        if (input.selectionStart === 0 && input.selectionEnd === 0) {
+          e.preventDefault();
+          focusCell(r, c - 1);
+        }
+        break;
+      case "ArrowRight":
+        const len = input.value.length;
+        if (input.selectionStart === len && input.selectionEnd === len) {
+          e.preventDefault();
+          focusCell(r, c + 1);
+        }
+        break;
+    }
+  });
+
   // Listen for formula changes to save draft
   document.getElementById("formula-input").addEventListener("input", () => {
     localStorage.setItem("omnicalc_formula", document.getElementById("formula-input").value);
@@ -22,6 +75,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // Setup mobile swipe detection
   initSwipeGestures();
 });
+
+// Helper to focus and select specific grid cell
+function focusCell(r, c) {
+  if (r >= 0 && r < 10 && c >= 0 && c < 3) {
+    const nextCell = document.getElementById(`cell-${r}-${c}`);
+    if (nextCell) {
+      nextCell.focus();
+      // Select text for easier rewriting, like a real spreadsheet
+      setTimeout(() => {
+        nextCell.select();
+      }, 0);
+    }
+  }
+}
 
 // Demo Formula loader
 function loadDemoFormula() {
