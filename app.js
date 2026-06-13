@@ -1,4 +1,4 @@
-// State variables
+﻿// State variables
 // Each entry: { raw, prettified, result, error }
 let leftFormulaLines = [];
 
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Helper to focus and select specific grid cell
 function focusCell(r, c) {
-  if (r >= 0 && r < 10 && c >= 0 && c < 3) {
+  if (r >= 0 && r < 100 && c >= 0 && c < 3) {
     const nextCell = document.getElementById(`cell-${r}-${c}`);
     if (nextCell) {
       nextCell.focus();
@@ -92,10 +92,10 @@ function focusCell(r, c) {
 
 // Demo Formula loader
 function loadDemoFormula() {
-  const demo = "average(10 pl 2, var.s(3, 5, 7) mu 4) mi sin(30도) pl log(10, 100) upper 3";
+  const demo = "average(10 pl 2, var.s(3, 5, 7) mu 4) mi sin(30?? pl log(10, 100) upper 3";
   document.getElementById("formula-input").value = demo;
   localStorage.setItem("omnicalc_formula", demo);
-  showToast("예제 수식이 로드되었습니다.");
+  showToast("?덉젣 ?섏떇??濡쒕뱶?섏뿀?듬땲??");
 }
 
 // ----------------------------------------------------
@@ -205,9 +205,9 @@ function parseFormula(rawExpr) {
     expr = expr.replace(regex, item.placeholder);
   });
 
-  // Parse Degree symbol "도"
-  // Example: 30도 -> ((30) * Math.PI / 180)
-  expr = expr.replace(/(\d+(?:\.\d+)?)\s*도/g, "(($1) * Math.PI / 180)");
+  // Parse Degree symbol "??
+  // Example: 30??-> ((30) * Math.PI / 180)
+  expr = expr.replace(/(\d+(?:\.\d+)?)\s*??g, "(($1) * Math.PI / 180)");
 
   // Translate custom operators
   expr = expr.replace(/pl/g, "+");
@@ -254,8 +254,8 @@ function prettifyFormula(raw) {
   p = p.replace(/combin/gi, "##COMBIN##");
   p = p.replace(/\bpl\b/gi, "+");
   p = p.replace(/\bmi\b/gi, "-");
-  p = p.replace(/\bmu\b/gi, "×");
-  p = p.replace(/\bdi\b/gi, "÷");
+  p = p.replace(/\bmu\b/gi, "횞");
+  p = p.replace(/\bdi\b/gi, "첨");
   p = p.replace(/\bupper\b/gi, "^");
   p = p.replace(/##STDEV_S##/g, "stdev.s");
   p = p.replace(/##STDEV_P##/g, "stdev.p");
@@ -277,7 +277,7 @@ function evaluateLine(rawLine) {
     __log, __average, __sum, __stdev_s, __stdev_p, __var_s, __var_p, __permut, __combin, factorial
   );
   if (res === null || res === undefined || isNaN(res)) {
-    throw new Error("결과값이 올바르지 않습니다 (NaN).");
+    throw new Error("寃곌낵媛믪씠 ?щ컮瑜댁? ?딆뒿?덈떎 (NaN).");
   }
   return Number.isInteger(res) ? res.toString() : parseFloat(res.toFixed(10)).toString();
 }
@@ -293,7 +293,7 @@ function calculateFormula() {
   const nonEmptyLines = lines.filter(l => l.trim() !== "");
 
   if (nonEmptyLines.length === 0) {
-    resultEl.innerHTML = "<span class='result-placeholder'>수식을 입력하세요.</span>";
+    resultEl.innerHTML = "<span class='result-placeholder'>?섏떇???낅젰?섏꽭??</span>";
     parsedEl.textContent = "";
     leftFormulaLines = [];
     return;
@@ -322,8 +322,8 @@ function calculateFormula() {
         `<div class="result-line result-line--error">`
         + `<span class="result-line-num">${idx + 1}</span>`
         + `<span class="result-line-expr">${escapeHtml(raw)}</span>`
-        + `<span class="result-line-eq">→</span>`
-        + `<span class="result-line-val error-msg">오류</span>`
+        + `<span class="result-line-eq">??/span>`
+        + `<span class="result-line-val error-msg">?ㅻ쪟</span>`
         + `</div>`
       );
     }
@@ -346,23 +346,23 @@ function escapeHtml(str) {
 // Clear Left Section
 function clearFormula() {
   document.getElementById("formula-input").value = "";
-  document.getElementById("formula-result").innerHTML = "<span class='result-placeholder'>대기 중...</span>";
+  document.getElementById("formula-result").innerHTML = "<span class='result-placeholder'>?湲?以?..</span>";
   document.getElementById("formula-parsed").textContent = "";
   leftFormulaLines = [];
   localStorage.removeItem("omnicalc_formula");
   localStorage.removeItem("omnicalc_formula_result");
-  showToast("수식이 초기화되었습니다.");
+  showToast("?섏떇??珥덇린?붾릺?덉뒿?덈떎.");
 }
 
 // Copy Formula (a) -> Each line: prettified expression = result
 function copyFormulaA() {
   if (!leftFormulaLines || leftFormulaLines.length === 0) {
-    showToast("계산을 먼저 완료해 주세요.", true);
+    showToast("怨꾩궛??癒쇱? ?꾨즺??二쇱꽭??", true);
     return;
   }
   const successLines = leftFormulaLines.filter(l => l.result !== null);
   if (successLines.length === 0) {
-    showToast("정상적으로 계산된 수식이 없습니다.", true);
+    showToast("?뺤긽?곸쑝濡?怨꾩궛???섏떇???놁뒿?덈떎.", true);
     return;
   }
   const text = successLines.map(l => `${l.pretty} = ${l.result}`).join("\n");
@@ -372,12 +372,12 @@ function copyFormulaA() {
 // Copy Formula (b) -> All results only (one per line)
 function copyFormulaB() {
   if (!leftFormulaLines || leftFormulaLines.length === 0) {
-    showToast("계산을 먼저 완료해 주세요.", true);
+    showToast("怨꾩궛??癒쇱? ?꾨즺??二쇱꽭??", true);
     return;
   }
   const successLines = leftFormulaLines.filter(l => l.result !== null);
   if (successLines.length === 0) {
-    showToast("정상적으로 계산된 수식이 없습니다.", true);
+    showToast("?뺤긽?곸쑝濡?怨꾩궛???섏떇???놁뒿?덈떎.", true);
     return;
   }
   const text = successLines.map(l => l.result).join("\n");
@@ -387,11 +387,11 @@ function copyFormulaB() {
 // Export formula results as txt file (all lines)
 function exportFormulaTxt() {
   if (!leftFormulaLines || leftFormulaLines.length === 0) {
-    showToast("수식을 입력하고 계산을 먼저 실행해 주세요.", true);
+    showToast("?섏떇???낅젰?섍퀬 怨꾩궛??癒쇱? ?ㅽ뻾??二쇱꽭??", true);
     return;
   }
   const lines = leftFormulaLines.map((l, i) => {
-    if (l.error) return `[${i + 1}] ${l.raw}  → 오류: ${l.error}`;
+    if (l.error) return `[${i + 1}] ${l.raw}  ???ㅻ쪟: ${l.error}`;
     return `[${i + 1}] ${l.pretty} = ${l.result}`;
   });
   const content = `[OmniCalc Multi-Line Formula Results]\nExport Time: ${new Date().toLocaleString()}\n\n` + lines.join("\n");
@@ -407,7 +407,7 @@ function buildGrid() {
   const tbody = document.getElementById("grid-body");
   tbody.innerHTML = "";
   
-  for (let r = 0; r < 10; r++) {
+  for (let r = 0; r < 100; r++) {
     const tr = document.createElement("tr");
     
     // Row number cell
@@ -438,7 +438,7 @@ function calculateGrid() {
   
   for (let c = 0; c < 3; c++) {
     let sum = 0;
-    for (let r = 0; r < 10; r++) {
+    for (let r = 0; r < 100; r++) {
       const input = document.getElementById(`cell-${r}-${c}`);
       if (input) {
         const val = input.value.trim();
@@ -472,7 +472,7 @@ function formatNumber(num) {
 
 // Reset Grid Content
 function clearGrid() {
-  for (let r = 0; r < 10; r++) {
+  for (let r = 0; r < 100; r++) {
     for (let c = 0; c < 3; c++) {
       const input = document.getElementById(`cell-${r}-${c}`);
       if (input) {
@@ -482,14 +482,14 @@ function clearGrid() {
     }
   }
   calculateGrid();
-  showToast("그리드가 초기화되었습니다.");
+  showToast("洹몃━?쒓? 珥덇린?붾릺?덉뒿?덈떎.");
 }
 
 // Copy Grid (a) -> List of all numbers in parentheses e.g. "(1,2,3)"
 function copyGridA() {
   const numbers = getGridNumbers();
   if (numbers.length === 0) {
-    showToast("입력된 숫자가 없습니다.", true);
+    showToast("?낅젰???レ옄媛 ?놁뒿?덈떎.", true);
     return;
   }
   const result = `(${numbers.join(",")})`;
@@ -506,7 +506,7 @@ function copyGridB() {
 function exportGridCsv() {
   const numbers = getGridNumbers();
   if (numbers.length === 0) {
-    showToast("내보낼 숫자가 없습니다.", true);
+    showToast("?대낫???レ옄媛 ?놁뒿?덈떎.", true);
     return;
   }
   
@@ -514,7 +514,7 @@ function exportGridCsv() {
   // Method 2: Export the entire 3x10 grid with empty slots.
   // Preserving grid layout is extremely convenient for spreadsheets.
   let csvContent = "";
-  for (let r = 0; r < 10; r++) {
+  for (let r = 0; r < 100; r++) {
     let rowCells = [];
     for (let c = 0; c < 3; c++) {
       const input = document.getElementById(`cell-${r}-${c}`);
@@ -529,7 +529,7 @@ function exportGridCsv() {
 // Scans grid in row-major order and pulls valid numbers
 function getGridNumbers() {
   let numbers = [];
-  for (let r = 0; r < 10; r++) {
+  for (let r = 0; r < 100; r++) {
     for (let c = 0; c < 3; c++) {
       const input = document.getElementById(`cell-${r}-${c}`);
       if (input) {
@@ -552,7 +552,7 @@ function getGridNumbers() {
 
 function saveGridState() {
   let gridState = [];
-  for (let r = 0; r < 10; r++) {
+  for (let r = 0; r < 100; r++) {
     let row = [];
     for (let c = 0; c < 3; c++) {
       const input = document.getElementById(`cell-${r}-${c}`);
@@ -580,7 +580,7 @@ function loadState() {
   if (savedGrid) {
     try {
       const gridState = JSON.parse(savedGrid);
-      for (let r = 0; r < 10; r++) {
+      for (let r = 0; r < 100; r++) {
         for (let c = 0; c < 3; c++) {
           const input = document.getElementById(`cell-${r}-${c}`);
           if (input && gridState[r] && gridState[r][c] !== undefined) {
@@ -662,10 +662,10 @@ function handleSwipe() {
 
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
-    showToast("클립보드에 복사되었습니다!");
+    showToast("?대┰蹂대뱶??蹂듭궗?섏뿀?듬땲??");
   }).catch(err => {
     console.error("Copy failed", err);
-    showToast("복사 실패. 브라우저 권한을 확인해 주세요.", true);
+    showToast("蹂듭궗 ?ㅽ뙣. 釉뚮씪?곗? 沅뚰븳???뺤씤??二쇱꽭??", true);
   });
 }
 

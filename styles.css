@@ -519,11 +519,36 @@ textarea:focus {
 /* Right Section - Grid components */
 .grid-table-container {
   overflow-x: auto;
+  overflow-y: auto;
   border-radius: var(--radius-md);
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.45);
-  max-height: 400px;
+  /* ~10 rows visible: each row ~38px + header ~42px */
+  height: 422px;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.01);
+}
+
+/* Custom scrollbar for grid */
+.grid-table-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.grid-table-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.grid-table-container::-webkit-scrollbar-thumb {
+  background: rgba(37, 99, 235, 0.2);
+  border-radius: 4px;
+}
+.grid-table-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.4);
+}
+
+/* Sticky header stays visible while scrolling */
+.data-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .data-grid {
