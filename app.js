@@ -198,6 +198,11 @@ function __combin(n, r) {
   return factorial(n) / (factorial(r) * factorial(n - r));
 }
 
+function __zscore(x, avg, stdev) {
+  if (stdev === 0) return NaN;
+  return (x - avg) / stdev;
+}
+
 // Function to preprocess formula to javascript executable code
 function parseFormula(rawExpr) {
   let expr = rawExpr.toLowerCase();
@@ -212,6 +217,7 @@ function parseFormula(rawExpr) {
     { key: "sum", placeholder: "##SUM##" },
     { key: "permut", placeholder: "##PERMUT##" },
     { key: "combin", placeholder: "##COMBIN##" },
+    { key: "zscore", placeholder: "##ZSCORE##" },
     { key: "asin", placeholder: "##ASIN##" },
     { key: "acos", placeholder: "##ACOS##" },
     { key: "atan", placeholder: "##ATAN##" },
@@ -249,6 +255,7 @@ function parseFormula(rawExpr) {
     "##SUM##": "__sum",
     "##PERMUT##": "__permut",
     "##COMBIN##": "__combin",
+    "##ZSCORE##": "__zscore",
     "##ASIN##": "Math.asin",
     "##ACOS##": "Math.acos",
     "##ATAN##": "Math.atan",
@@ -293,11 +300,11 @@ function prettifyFormula(raw) {
 function evaluateLine(rawLine) {
   const parsedExpr = parseFormula(rawLine);
   const evaluator = new Function(
-    "__log", "__average", "__sum", "__stdev_s", "__stdev_p", "__var_s", "__var_p", "__permut", "__combin", "factorial",
+    "__log", "__average", "__sum", "__stdev_s", "__stdev_p", "__var_s", "__var_p", "__permut", "__combin", "factorial", "__zscore",
     `return (${parsedExpr});`
   );
   const res = evaluator(
-    __log, __average, __sum, __stdev_s, __stdev_p, __var_s, __var_p, __permut, __combin, factorial
+    __log, __average, __sum, __stdev_s, __stdev_p, __var_s, __var_p, __permut, __combin, factorial, __zscore
   );
   if (res === null || res === undefined || isNaN(res)) {
     throw new Error("결과값이 올바르지 않습니다 (NaN).");
